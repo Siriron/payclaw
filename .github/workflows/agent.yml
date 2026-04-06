@@ -27,11 +27,10 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install ethers @google/generative-ai
+        run: npm install ethers
 
       - name: Run PayClaw Agent
         env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           WALLET_PRIVATE_KEY: ${{ secrets.WALLET_PRIVATE_KEY }}
           RUN_NOTE: ${{ github.event.inputs.note || '' }}
         run: node payclaw_agent.js
