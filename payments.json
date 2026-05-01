@@ -1,13 +1,13 @@
 {
-  "cycle": 1,
-  "cycle_date": "2026-04-06",
-  "next_cycle": "2026-05-06",
-  "last_payment_tx": null,
-  "agent_decision": "Insufficient balance (2850.00 USDC, need 0.00 USDC)",
-  "paid_this_run": false,
+  "cycle": 2,
+  "cycle_date": "2026-05-01",
+  "next_cycle": "2026-05-31",
+  "last_payment_tx": "0x472d4b6777e879691f0a9bd31ecacc56c32dcf92435729202d0d584a1f735612",
+  "agent_decision": "First ever payment — balance sufficient",
+  "paid_this_run": true,
   "contract_balance": "2850.00",
-  "payroll_needed": "0.00",
-  "note": "Cycle 1 - No payment - Insufficient balance (2850.00 USDC, need 0.00 USDC)",
+  "payroll_needed": "24.50",
+  "note": "Cycle 2 - AI agent executed - Arc Testnet",
   "recipients": [
     {
       "rank": 1,
