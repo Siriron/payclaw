@@ -1,13 +1,8 @@
 'use client';
 
-import { AppKitProvider, SwapWidget } from '@circle-fin/app-kit';
-import { EthersV6Adapter } from '@circle-fin/adapter-ethers-v6';
 import { KitPageLayout } from '@/lib/kitpage';
-import { ARC_TESTNET_KIT } from '@/lib/contract';
 
 const KIT_KEY = process.env.NEXT_PUBLIC_CIRCLE_KIT_KEY ?? '';
-let _adapter: any = null;
-function getAdapter() { if (typeof window === 'undefined') return null; if (!_adapter) _adapter = new EthersV6Adapter(); return _adapter; }
 
 export default function SwapPage() {
   return (
@@ -18,9 +13,17 @@ export default function SwapPage() {
       accentColor="#00e5ff"
       desc="Exchange tokens natively on Arc Testnet — the only testnet with Circle App Kit Swap support. Convert between available tokens on Arc before depositing into the payroll contract or distributing to workers."
     >
-      <AppKitProvider kitKey={KIT_KEY} adapter={getAdapter()}>
-        <SwapWidget defaultChain={ARC_TESTNET_KIT as any} />
-      </AppKitProvider>
+      {KIT_KEY ? (
+        <div id="circle-swap-widget" style={{ minHeight: 320 }}>
+          <circle-swap-widget kit-key={KIT_KEY} />
+        </div>
+      ) : (
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'rgba(0,229,255,.35)', letterSpacing: '.12em', padding: '32px 0', lineHeight: 2 }}>
+          // CIRCLE KIT KEY NOT CONFIGURED<br />
+          ADD NEXT_PUBLIC_CIRCLE_KIT_KEY TO VERCEL ENV VARS<br />
+          GET YOUR KEY AT CONSOLE.CIRCLE.COM
+        </div>
+      )}
     </KitPageLayout>
   );
 }
