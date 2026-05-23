@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpolygon points='16,2 28,9 28,23 16,30 4,23 4,9' fill='%23000' stroke='%2339ff14' stroke-width='2'/%3E%3Ctext x='50%25' y='55%25' text-anchor='middle' dominant-baseline='middle' font-family='monospace' font-size='12' font-weight='bold' fill='%2339ff14'%3E%24%3C/text%3E%3C/svg%3E">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAYCLAW — Onchain Payment Suite</title>
+<meta name="description" content="Complete onchain payment infrastructure on Arc Network. Powered by Circle.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#000;--bg2:#0a0a0a;--g1:#39ff14;--g2:#00e676;--g3:#ccff00;
+  --amber:#ffe600;--red:#ff4444;--cyan:#00e5ff;
+  --muted:#8a8a8a;--bdr:rgba(57,255,20,.18);--text:#d4d4d4;--text2:#555;
+  --mono:'Share Tech Mono',monospace;--disp:'Orbitron',monospace;--sans:'Rajdhani',sans-serif;
+  --ease:cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{overflow-x:hidden;scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;cursor:none;}
+@media(hover:none){body{cursor:auto;}.cur,.cur-dot{display:none;}}
+
+/* ── KEYFRAMES ── */
+@keyframes scan{0%{top:-2px;opacity:0}5%{opacity:1}95%{opacity:1}100%{top:100vh;opacity:0}}
+@keyframes pdot{0%{box-shadow:0 0 0 0 rgba(57,255,20,.5)}70%{box-shadow:0 0 0 6px rgba(57,255,20,0)}100%{box-shadow:0 0 0 0 rgba(57,255,20,0)}}
+@keyframes tick{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+@keyframes shimmer{100%{transform:translateX(200%)}}
+@keyframes hPulse{0%,100%{text-shadow:0 0 10px var(--g1)}50%{text-shadow:0 0 28px var(--g1),0 0 55px rgba(57,255,20,.3)}}
+@keyframes gradShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+@keyframes logoGlowAnim{0%,100%{filter:drop-shadow(0 0 6px rgba(57,255,20,.7)) drop-shadow(0 0 16px rgba(57,255,20,.35))}50%{filter:drop-shadow(0 0 12px rgba(57,255,20,1)) drop-shadow(0 0 30px rgba(57,255,20,.6)) drop-shadow(0 0 50px rgba(57,255,20,.25))}}
+@keyframes logoSheenRect{0%,10%{transform:translateX(-120px);opacity:0}25%{opacity:1}65%{transform:translateX(160px);opacity:.8}80%,100%{transform:translateX(160px);opacity:0}}
+@keyframes hex3dSpin{0%{transform:rotateY(0deg) rotateX(6deg)}50%{transform:rotateY(180deg) rotateX(-6deg)}100%{transform:rotateY(360deg) rotateX(6deg)}}
+@keyframes hsp{100%{transform:rotate(360deg)}}
+@keyframes bip{0%,100%{text-shadow:0 0 12px var(--g1)}50%{text-shadow:0 0 24px var(--g1),0 0 60px rgba(57,255,20,.5)}}
+@keyframes gp{0%,100%{opacity:.6}50%{opacity:1}}
+@keyframes bootTitleGlow{0%,100%{filter:drop-shadow(0 0 8px rgba(57,255,20,.9)) drop-shadow(0 0 20px rgba(57,255,20,.5))}50%{filter:drop-shadow(0 0 16px rgba(57,255,20,1)) drop-shadow(0 0 40px rgba(57,255,20,.8)) drop-shadow(0 0 80px rgba(57,255,20,.4))}}
+@keyframes bootTitleSheen{0%,10%{transform:translateX(-200px);opacity:0}22%{opacity:1}65%{transform:translateX(240px);opacity:.9}78%,100%{transform:translateX(240px);opacity:0}}
+@keyframes bflow{0%{background-position:0% 50%}100%{background-position:300% 50%}}
+@keyframes revealUp{from{opacity:0;transform:translateY(32px)}to{opacity:1;transform:translateY(0)}}
+@keyframes cardSlideIn{from{opacity:0;transform:translateY(40px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes arrowPulse{0%,100%{opacity:.25;transform:translateX(0)}50%{opacity:.8;transform:translateX(4px)}}
+@keyframes rotG{100%{transform:rotate(360deg)}}
+
+/* ── CANVAS ── */
+#hexGridCanvas{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;opacity:.32;will-change:transform;}
+
+/* ── SCANLINE ── */
+.scanline{position:fixed;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(57,255,20,.4) 30%,rgba(204,255,0,.6) 50%,rgba(57,255,20,.4) 70%,transparent);pointer-events:none;z-index:999;animation:scan 9s linear infinite;box-shadow:0 0 4px rgba(57,255,20,.2);}
+
+/* ── CURSOR ── */
+.cur,.cur-dot{position:fixed;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);}
+.cur{width:20px;height:20px;border:1px solid var(--g1);border-radius:50%;mix-blend-mode:screen;transition:width .18s,height .18s,opacity .18s;}
+.cur-dot{width:4px;height:4px;background:var(--g1);border-radius:50%;box-shadow:0 0 6px var(--g1);transition:left .04s,top .04s;}
+body:has(a:hover) .cur,body:has(button:hover) .cur{width:32px;height:32px;opacity:.5;}
+
+/* ── CORNER PULSES ── */
+.corner-pulse{position:fixed;width:80px;height:80px;pointer-events:none;z-index:2;}
+.corner-pulse::before,.corner-pulse::after{content:'';position:absolute;border-color:var(--g1);border-style:solid;opacity:0;animation:cp 4s ease-in-out infinite;}
+.corner-pulse::before{width:100%;height:100%;border-width:1px 0 0 1px;top:0;left:0;}
+.corner-pulse::after{width:60%;height:60%;border-width:1px 0 0 1px;top:8px;left:8px;animation-delay:.4s;}
+@keyframes cp{0%,100%{opacity:0}30%,70%{opacity:.35}50%{opacity:.6}}
+.cp-tl{top:0;left:0;}.cp-tr{top:0;right:0;transform:scaleX(-1);}.cp-bl{bottom:0;left:0;transform:scaleY(-1);}.cp-br{bottom:0;right:0;transform:scale(-1);}
+
+/* ── SPOTLIGHT ── */
+.spotlight{position:fixed;inset:0;pointer-events:none;z-index:1;transition:opacity .3s;opacity:0;background:radial-gradient(circle 280px at var(--mx,50%) var(--my,50%),rgba(57,255,20,.04) 0%,transparent 70%);}
+body:hover .spotlight{opacity:1;}
+
+/* ── BOOT SCREEN ── */
+#bootScreen{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden;}
+#bootScreen::before{content:'';position:absolute;inset:0;z-index:2;background:radial-gradient(ellipse 700px 500px at 50% 50%,rgba(57,255,20,.12) 0%,transparent 65%);animation:gp 2s ease-in-out infinite;pointer-events:none;}
+#bootScreen::after{content:'';position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.15) 2px,rgba(0,0,0,.15) 4px);pointer-events:none;z-index:3;}
+.boot-curtain-top,.boot-curtain-bot{position:absolute;left:0;right:0;height:50%;background:#000;z-index:1;transition:transform .75s cubic-bezier(.77,0,.18,1);}
+.boot-curtain-top{top:0;transform:translateY(0);}
+.boot-curtain-bot{bottom:0;transform:translateY(0);}
+#bootScreen.curtain-drop .boot-curtain-top{transform:translateY(-101%);box-shadow:0 4px 30px rgba(57,255,20,.4);}
+#bootScreen.curtain-drop .boot-curtain-bot{transform:translateY(101%);box-shadow:0 -4px 30px rgba(57,255,20,.4);}
+#bootScreen.fully-hidden{display:none;}
+.boot-inner{display:flex;flex-direction:column;align-items:center;gap:0;width:380px;position:relative;z-index:4;}
+@media(max-width:420px){.boot-inner{width:calc(100vw - 40px);}}
+.boot-logo-mark{position:relative;width:80px;height:80px;display:flex;align-items:center;justify-content:center;margin-bottom:28px;}
+.boot-logo-mark::before{content:'';position:absolute;inset:-12px;border:1px solid rgba(57,255,20,.08);clip-path:polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);animation:hsp 8s linear infinite;}
+.boot-logo-mark::after{content:'';position:absolute;inset:-4px;border:1px solid rgba(57,255,20,.18);clip-path:polygon(50% 0%,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%);animation:hsp 5s linear infinite reverse;}
+.boot-hex-svg{position:relative;z-index:1;}
+.boot-hex-svg polygon{fill:none;stroke:rgba(57,255,20,.55);stroke-width:1.5;}
+.boot-hex-svg .inner{stroke:rgba(204,255,0,.25);stroke-width:.8;}
+.boot-hex-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:28px;color:var(--g1);text-shadow:0 0 16px rgba(57,255,20,.8),0 0 40px rgba(57,255,20,.4);animation:bip 1.8s ease-in-out infinite;z-index:2;}
+.boot-title{display:block;line-height:1;overflow:visible;margin-bottom:6px;}
+.boot-title svg{display:block;overflow:visible;margin:0 auto;}
+.boot-title .bt-glow{animation:bootTitleGlow 2s ease-in-out infinite;}
+.boot-title .bt-sheen{animation:bootTitleSheen 3.5s ease-in-out infinite;}
+.boot-tagline{font-family:var(--mono);font-size:11px;letter-spacing:.35em;color:rgba(57,255,20,.6);text-transform:uppercase;margin-bottom:32px;}
+.boot-lines{font-family:var(--mono);font-size:11px;color:rgba(57,255,20,.7);line-height:2.1;width:100%;min-height:80px;border-left:2px solid rgba(57,255,20,.18);padding:6px 0 6px 14px;margin-bottom:20px;background:rgba(57,255,20,.015);}
+.boot-lines div{animation:revealUp .15s ease both;}
+.boot-bar-wrap{width:100%;display:flex;flex-direction:column;gap:5px;}
+.boot-bar{width:100%;height:2px;background:rgba(57,255,20,.1);border-radius:1px;position:relative;overflow:hidden;}
+.boot-fill{height:100%;background:linear-gradient(90deg,transparent,var(--g1),var(--g3),var(--amber),var(--g1));background-size:200% 100%;width:0%;transition:width .1s linear;box-shadow:0 0 8px var(--g1);animation:bflow 1.5s linear infinite;}
+.boot-pct{font-family:var(--mono);font-size:9px;color:rgba(57,255,20,.4);letter-spacing:.2em;text-align:right;}
+
+/* ── LAYOUT ── */
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:0 20px;}
+@media(max-width:480px){.wrap{padding:0 12px;}}
+
+/* ── HEADER ── */
+header{padding:12px 0;display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:16px;border-bottom:1px solid var(--bdr);animation:revealUp .5s ease both;position:relative;z-index:1;}
+@media(max-width:900px){header{grid-template-columns:auto auto;justify-content:space-between;}}
+.logo-block{display:flex;align-items:center;gap:7px;min-width:0;}
+.logo-hex-3d{position:relative;width:52px;height:52px;perspective:200px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.hex-3d-spinner{width:100%;height:100%;transform-style:preserve-3d;animation:hex3dSpin 14s linear infinite;}
+.hex-3d-spinner svg{position:absolute;top:0;left:0;width:100%;height:100%;}
+.hex-face-f{transform:translateZ(3px);}
+.hex-face-b{transform:translateZ(-3px) rotateY(180deg);}
+.hex-glow-halo{position:absolute;inset:-6px;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(57,255,20,.14) 0%,transparent 68%);animation:hPulse 2.5s ease-in-out infinite;}
+.hex-3d-icon{position:absolute;font-size:17px;color:var(--g1);z-index:2;text-shadow:0 0 14px var(--g1),0 0 28px rgba(57,255,20,.4);animation:hPulse 2s ease-in-out infinite;top:50%;left:50%;transform:translate(-50%,-50%);}
+.logo-text{display:flex;flex-direction:column;gap:1px;min-width:0;}
+.logo-name{display:block;line-height:1;overflow:visible;}
+.logo-name svg{display:block;overflow:visible;}
+.logo-name svg .glow-text{animation:logoGlowAnim 3s ease-in-out infinite;}
+.logo-name svg .sheen-rect{animation:logoSheenRect 5s ease-in-out infinite;}
+.logo-sub{font-family:var(--mono);font-size:10px;color:rgba(57,255,20,.65);letter-spacing:.16em;text-transform:uppercase;margin-top:1px;white-space:nowrap;}
+@media(max-width:480px){.logo-sub{display:none;}}
+.hdr-center{display:flex;align-items:center;gap:16px;justify-content:center;font-family:var(--mono);font-size:10px;color:rgba(57,255,20,.3);letter-spacing:.18em;}
+@media(max-width:900px){.hdr-center{display:none;}}
+.hdr-center span{color:var(--g1);}
+.hdr-right{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.net-badge{display:flex;align-items:center;gap:6px;padding:6px 10px;border:1px solid var(--bdr);background:rgba(57,255,20,.02);font-family:var(--mono);font-size:10px;color:rgba(57,255,20,.6);letter-spacing:.1em;position:relative;overflow:hidden;white-space:nowrap;}
+.net-badge::before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(57,255,20,.07),transparent);transform:translateX(-100%);animation:shimmer 3s infinite;}
+.pdot{width:5px;height:5px;background:var(--g1);border-radius:50%;flex-shrink:0;animation:pdot 1.5s infinite;}
+@media(max-width:700px){.net-badge{display:none;}}
+.block-badge{font-family:var(--mono);font-size:9px;color:rgba(57,255,20,.4);letter-spacing:.12em;padding:6px 10px;border:1px solid rgba(57,255,20,.08);}
+.block-badge span{color:var(--g1);}
+
+/* ── TICKER ── */
+.ticker-bar{padding:6px 0;border-bottom:1px solid var(--bdr);overflow:hidden;margin-bottom:0;animation:revealUp .5s .1s ease both;opacity:0;animation-fill-mode:forwards;}
+.ticker-inner{display:flex;white-space:nowrap;animation:tick 32s linear infinite;}
+.t-item{font-family:var(--mono);font-size:11px;color:rgba(57,255,20,.55);letter-spacing:.12em;padding:0 26px;display:inline-flex;align-items:center;gap:8px;}
+.t-item .hi{color:var(--g1);}
+
+/* ── HERO ── */
+.hero{padding:52px 0 40px;position:relative;z-index:1;}
+.hero-tag{font-family:var(--mono);font-size:10px;color:rgba(57,255,20,.7);letter-spacing:.24em;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:10px;}
+.hero-tag::before{content:'';width:28px;height:1px;background:linear-gradient(90deg,transparent,rgba(57,255,20,.7));}
+.hero-tag::after{content:'';flex:1;max-width:60px;height:1px;background:linear-gradient(90deg,rgba(57,255,20,.5),transparent);}
+.hero-title{font-family:var(--disp);font-size:clamp(28px,5.5vw,56px);font-weight:900;letter-spacing:.02em;color:#e8e8e8;line-height:1.1;margin-bottom:14px;}
+.hero-title .suite-word{background:linear-gradient(90deg,var(--g1) 0%,var(--g3) 40%,var(--amber) 70%,var(--g3) 100%);background-size:250% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:gradShift 5s ease infinite;filter:drop-shadow(0 0 20px rgba(57,255,20,.3));}
+.hero-sub{font-family:var(--mono);font-size:clamp(11px,1.6vw,13px);color:rgba(57,255,20,.45);line-height:2.1;max-width:600px;margin-bottom:20px;letter-spacing:.04em;}
+.hero-sub strong{color:var(--g1);font-weight:700;}
+
+/* ── LIVE STRIP ── */
+.live-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(57,255,20,.1);border:1px solid rgba(57,255,20,.12);margin-bottom:0;}
+@media(max-width:600px){.live-strip{grid-template-columns:repeat(2,1fr);}}
+.ls-cell{background:var(--bg);padding:13px 14px;}
+.ls-lbl{font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px;}
+.ls-val{font-family:var(--disp);font-size:17px;font-weight:900;}
+.ls-val.g{color:var(--g1);}.ls-val.a{color:var(--amber);}.ls-val.c{color:var(--cyan);}
+.status-bar{display:flex;align-items:center;border:1px solid rgba(57,255,20,.08);border-top:none;background:rgba(57,255,20,.01);flex-wrap:wrap;}
+.sb-item{display:flex;align-items:center;gap:5px;padding:7px 14px;border-right:1px solid rgba(57,255,20,.06);font-family:var(--mono);font-size:8px;color:var(--muted);letter-spacing:.1em;white-space:nowrap;}
+.sb-item:last-child{border-right:none;}
+.sb-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0;}
+.sb-dot.ok{background:var(--g1);box-shadow:0 0 5px var(--g1);}
+
+/* ── SECTION LABEL ── */
+.sec-label{font-family:var(--mono);font-size:9px;color:rgba(57,255,20,.6);letter-spacing:.24em;text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:28px;margin-top:56px;}
+.sec-label::before{content:'';width:20px;height:1px;background:linear-gradient(90deg,transparent,rgba(57,255,20,.5));}
+.sec-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(57,255,20,.12),transparent);}
+
+/* ── SUITE CARDS — scroll one by one ── */
+.suite-wrap{display:flex;flex-direction:column;gap:1px;background:rgba(57,255,20,.06);border:1px solid rgba(57,255,20,.12);}
+.suite-card{
+  background:var(--bg2);
+  border-bottom:1px solid rgba(57,255,20,.08);
+  display:grid;
+  grid-template-columns:72px 1fr auto;
+  align-items:center;
+  gap:0;
+  cursor:pointer;
+  transition:all .22s var(--ease);
+  position:relative;
+  overflow:hidden;
+  text-decoration:none;
+  color:inherit;
+  opacity:0;
+  transform:translateY(24px);
+  animation:cardSlideIn .5s ease forwards;
+}
+.suite-card:last-child{border-bottom:none;}
+.suite-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--card-accent,var(--g1)) 50%,transparent);opacity:0;transition:opacity .22s;}
+.suite-card:hover::before{opacity:.6;}
+.suite-card:hover{background:#060c06;}
+.suite-card:hover .sc-arrow{opacity:1;transform:translateX(4px);}
+
+/* Icon column */
+.sc-icon-col{
+  display:flex;align-items:center;justify-content:center;
+  padding:28px 0;
+  border-right:1px solid rgba(57,255,20,.08);
+  background:rgba(57,255,20,.015);
+  position:relative;
+}
+.sc-icon{
+  width:44px;height:44px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;
+  border:1px solid;
+  transition:all .22s;
+}
+.suite-card:hover .sc-icon{box-shadow:0 0 18px currentColor;}
+
+/* Content */
+.sc-content{padding:24px 28px;}
+.sc-tag{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px;opacity:.65;}
+.sc-title{font-family:var(--disp);font-size:clamp(15px,2.2vw,20px);font-weight:700;color:#e8e8e8;letter-spacing:.06em;margin-bottom:10px;}
+.sc-desc{font-size:14px;line-height:1.7;color:var(--muted);max-width:600px;margin-bottom:14px;}
+.sc-pills{display:flex;flex-wrap:wrap;gap:5px;}
+.sc-pill{font-family:var(--mono);font-size:8px;letter-spacing:.1em;padding:3px 9px;border:1px solid;}
+
+/* Arrow */
+.sc-arrow-col{padding:0 28px;flex-shrink:0;}
+.sc-arrow{font-family:var(--mono);font-size:22px;opacity:.2;transition:all .22s;display:block;}
+@media(max-width:700px){.suite-card{grid-template-columns:56px 1fr;}.sc-arrow-col{display:none;}.sc-icon-col{padding:20px 0;}.sc-content{padding:18px 16px;}}
+
+/* Animation delays */
+.suite-card:nth-child(1){animation-delay:.05s;}
+.suite-card:nth-child(2){animation-delay:.12s;}
+.suite-card:nth-child(3){animation-delay:.19s;}
+.suite-card:nth-child(4){animation-delay:.26s;}
+.suite-card:nth-child(5){animation-delay:.33s;}
+.suite-card:nth-child(6){animation-delay:.40s;}
+.suite-card:nth-child(7){animation-delay:.47s;}
+
+/* ── POWERED BY ── */
+.powered-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:rgba(57,255,20,.06);border:1px solid rgba(57,255,20,.1);}
+@media(max-width:640px){.powered-grid{grid-template-columns:1fr;}}
+.pw-card{background:var(--bg2);padding:28px 24px;position:relative;overflow:hidden;}
+.pw-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;}
+.pw-card.arc::before{background:linear-gradient(90deg,transparent,var(--g1),transparent);}
+.pw-card.circ::before{background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.pw-name{font-family:var(--disp);font-size:18px;font-weight:900;margin-bottom:4px;}
+.pw-name.arc{color:var(--g1);}.pw-name.circ{color:var(--cyan);}
+.pw-badge{font-family:var(--mono);font-size:9px;letter-spacing:.16em;opacity:.5;margin-bottom:14px;display:block;text-transform:uppercase;}
+.pw-desc{font-size:13px;line-height:1.65;color:var(--muted);margin-bottom:16px;}
+.pills{display:flex;flex-wrap:wrap;gap:5px;}
+.pill{font-family:var(--mono);font-size:8px;letter-spacing:.1em;padding:3px 9px;border:1px solid;}
+.pill.arc{border-color:rgba(57,255,20,.22);color:rgba(57,255,20,.6);}
+.pill.circ{border-color:rgba(0,229,255,.22);color:rgba(0,229,255,.6);}
+
+/* ── FOOTER ── */
+footer{border-top:1px solid var(--bdr);padding:28px 0 36px;margin-top:64px;position:relative;z-index:1;}
+.footer-inner{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+.footer-brand{font-family:var(--disp);font-size:14px;font-weight:900;color:rgba(57,255,20,.45);letter-spacing:.12em;}
+.footer-tagline{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:.14em;}
+.footer-links{display:flex;gap:18px;flex-wrap:wrap;}
+.footer-link{font-family:var(--mono);font-size:9px;color:var(--text2);letter-spacing:.12em;text-decoration:none;text-transform:uppercase;transition:color .15s;}
+.footer-link:hover{color:var(--g1);}
+@media(max-width:600px){.footer-inner{flex-direction:column;align-items:flex-start;gap:14px;}}
+</style>
+</head>
+<body>
+
+<!-- BOOT SCREEN -->
+<div id="bootScreen">
+  <div class="boot-curtain-top"></div>
+  <div class="boot-curtain-bot"></div>
+  <div class="boot-inner">
+    <div class="boot-logo-mark">
+      <svg class="boot-hex-svg" width="80" height="80" viewBox="0 0 80 80">
+        <polygon points="40,5 72,22.5 72,57.5 40,75 8,57.5 8,22.5"/>
+        <polygon class="inner" points="40,14 63,27 63,53 40,66 17,53 17,27"/>
+      </svg>
+      <div class="boot-hex-icon">⬡</div>
+    </div>
+    <div class="boot-title">
+      <svg width="340" height="52" viewBox="0 0 340 52" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+        <defs>
+          <linearGradient id="lgBoot" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%"   stop-color="#ffffff"/>
+            <stop offset="8%"   stop-color="#ccffcc"/>
+            <stop offset="22%"  stop-color="#55ff30"/>
+            <stop offset="38%"  stop-color="#39ff14"/>
+            <stop offset="52%"  stop-color="#1a9908"/>
+            <stop offset="64%"  stop-color="#0a5c02"/>
+            <stop offset="76%"  stop-color="#1a8806"/>
+            <stop offset="88%"  stop-color="#39ff14"/>
+            <stop offset="100%" stop-color="#aaffaa"/>
+          </linearGradient>
+          <linearGradient id="strokeBoot" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stop-color="rgba(255,255,255,0)"/>
+            <stop offset="25%"  stop-color="rgba(255,255,255,.6)"/>
+            <stop offset="50%"  stop-color="rgba(204,255,0,.9)"/>
+            <stop offset="75%"  stop-color="rgba(255,230,0,.5)"/>
+            <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+          </linearGradient>
+          <linearGradient id="sheenBoot" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%"   stop-color="white" stop-opacity="0"/>
+            <stop offset="35%"  stop-color="white" stop-opacity="0"/>
+            <stop offset="50%"  stop-color="white" stop-opacity=".9"/>
+            <stop offset="60%"  stop-color="white" stop-opacity=".3"/>
+            <stop offset="100%" stop-color="white" stop-opacity="0"/>
+          </linearGradient>
+          <clipPath id="bootTextClip">
+            <text x="2" y="42" font-family="'Orbitron','Share Tech Mono',monospace" font-size="42" font-weight="900" letter-spacing="6">PAYCLAW</text>
+          </clipPath>
+        </defs>
+        <text x="2" y="42" font-family="'Orbitron','Share Tech Mono',monospace" font-size="42" font-weight="900" letter-spacing="6" fill="rgba(0,30,0,.95)"  transform="translate(0,8)">PAYCLAW</text>
+        <text x="2" y="42" font-family="'Orbitron','Share Tech Mono',monospace" font-size="42" font-weight="900" letter-spacing="6" fill="rgba(0,55,2,.9)"   transform="translate(0,7)">PAYCLAW</text>
+        <text x="2" y="42" font-family="'Orbitron','Share Tech Mono',monospace" font-size="42" font-weight="900" letter-spacing="6" fill="rgba(1,80,4,.85)"  transform="translate(0,6)">PAYCLAW</text>
+        <text x="2" y="42" font-family="'Orbitron','Share Tech Mono',monospace" font-size="42" font-weight="900" letter-spacing="6" fill="rgba(2,110,6,.8)"  transform="translate(0,5)">PAYCLAW</text>
+        <text x="2" y="42" font-family="'Orbitron','Share Tech Mono',monospace" font-size="42" font-weight="900" letter-spacing="6" fill="rgba(3,140,10,.75)" transform="translate(0,4)">PAYCLAW</text>
+        <text x="2" y="42" font-family="'Orbitron','Share Tech Mono',monospace" font-size="42" font-weight="900" letter-spacing="6" fill="rgba(5,165,14,.7)" transform="translate(0,3)">PAYCLAW</text>
+        <text x="2" y="42" font-family="'Orbitron','Share Tech Mono',monospace" font-size="42" font-weight="900" letter-spacing="6" fill="rgba(8,195,18,.65)" transform="translate(0,2)">PAYCLAW</text>
+        <text x="2" y="42" font-family="'Orbitron','Share Tech Mono',monospace" font-size="42" font-weight="900" letter-spacing="6" fill="rgba(12,220,22,.55)" transform="translate(0,1)">PAYCLAW</text>
+        <text class="bt-glow" x="2" y="42" font-family="'Orbitron','Share Tech Mono',monospace" font-size="42" font-weight="900" letter-spacing="6" fill="url(#lgBoot)">PAYCLAW</text>
+        <text x="2" y="42" font-family="'Orbitron','Share Tech Mono',monospace" font-size="42" font-weight="900" letter-spacing="6" fill="none" stroke="url(#strokeBoot)" stroke-width=".8">PAYCLAW</text>
+        <g clip-path="url(#bootTextClip)">
+          <rect class="bt-sheen" x="-80" y="0" width="80" height="52" fill="url(#sheenBoot)" opacity=".75"/>
+        </g>
+      </svg>
+    </div>
+    <div class="boot-tagline">Onchain Payment Suite</div>
+    <div class="boot-lines" id="bootLines"></div>
+    <div class="boot-bar-wrap">
+      <div class="boot-bar"><div class="boot-fill" id="bootFill"></div></div>
+      <div class="boot-pct" id="bootPct"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CORNER PULSES -->
+<div class="corner-pulse cp-tl"></div>
+<div class="corner-pulse cp-tr"></div>
+<div class="corner-pulse cp-bl"></div>
+<div class="corner-pulse cp-br"></div>
+<div class="spotlight" id="spotlight"></div>
+<canvas id="hexGridCanvas"></canvas>
+<div class="cur" id="cur"></div>
+<div class="cur-dot" id="curDot"></div>
+<div class="scanline"></div>
+
+<div class="wrap">
+  <!-- HEADER -->
+  <header>
+    <div class="logo-block">
+      <div class="logo-hex-3d">
+        <div class="hex-glow-halo"></div>
+        <div class="hex-3d-spinner">
+          <svg class="hex-face-f" width="48" height="48" viewBox="0 0 48 48">
+            <polygon points="24,3 42,13.5 42,34.5 24,45 6,34.5 6,13.5" fill="none" stroke="rgba(57,255,20,.55)" stroke-width="1" stroke-dasharray="3 2"/>
+            <polygon points="24,9 37,16.5 37,31.5 24,39 11,31.5 11,16.5" fill="none" stroke="rgba(204,255,0,.2)" stroke-width=".5"/>
+          </svg>
+          <svg class="hex-face-b" width="48" height="48" viewBox="0 0 48 48">
+            <polygon points="24,3 42,13.5 42,34.5 24,45 6,34.5 6,13.5" fill="none" stroke="rgba(57,255,20,.2)" stroke-width=".5"/>
+          </svg>
+        </div>
+        <div class="hex-3d-icon">⬡</div>
+      </div>
+      <div class="logo-text">
+        <div class="logo-name">
+          <svg width="178" height="34" viewBox="0 0 178 34" xmlns="http://www.w3.org/2000/svg" overflow="visible">
+            <defs>
+              <linearGradient id="lgNav" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%"   stop-color="#ffffff"/>
+                <stop offset="15%"  stop-color="#e8ffb0"/>
+                <stop offset="35%"  stop-color="#ccff00"/>
+                <stop offset="55%"  stop-color="#7dff00"/>
+                <stop offset="72%"  stop-color="#39ff14"/>
+                <stop offset="88%"  stop-color="#00cc44"/>
+                <stop offset="100%" stop-color="#39ff14"/>
+              </linearGradient>
+              <filter id="navBloom" x="-15%" y="-80%" width="130%" height="260%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+                <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.2  0 0 0 0 1  0 0 0 0 0  0 0 0 0.7 0" result="glow"/>
+                <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <linearGradient id="strokeNav" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%"   stop-color="rgba(255,255,255,0)"/>
+                <stop offset="20%"  stop-color="rgba(255,255,255,.9)"/>
+                <stop offset="50%"  stop-color="rgba(255,255,255,.6)"/>
+                <stop offset="80%"  stop-color="rgba(204,255,0,.7)"/>
+                <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+              </linearGradient>
+              <linearGradient id="sheenNav" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%"   stop-color="white" stop-opacity="0"/>
+                <stop offset="45%"  stop-color="white" stop-opacity=".95"/>
+                <stop offset="58%"  stop-color="white" stop-opacity=".3"/>
+                <stop offset="100%" stop-color="white" stop-opacity="0"/>
+              </linearGradient>
+              <clipPath id="sheenClipNav">
+                <text x="0" y="26" font-family="'Orbitron',monospace" font-size="26" font-weight="900" letter-spacing="4">PAYCLAW</text>
+              </clipPath>
+            </defs>
+            <text x="0" y="26" font-family="'Orbitron',monospace" font-size="26" font-weight="900" letter-spacing="4" fill="rgba(0,40,0,.95)"  transform="translate(0,7)">PAYCLAW</text>
+            <text x="0" y="26" font-family="'Orbitron',monospace" font-size="26" font-weight="900" letter-spacing="4" fill="rgba(0,65,3,.9)"   transform="translate(0,6)">PAYCLAW</text>
+            <text x="0" y="26" font-family="'Orbitron',monospace" font-size="26" font-weight="900" letter-spacing="4" fill="rgba(1,95,5,.85)"  transform="translate(0,5)">PAYCLAW</text>
+            <text x="0" y="26" font-family="'Orbitron',monospace" font-size="26" font-weight="900" letter-spacing="4" fill="rgba(3,130,8,.78)" transform="translate(0,4)">PAYCLAW</text>
+            <text x="0" y="26" font-family="'Orbitron',monospace" font-size="26" font-weight="900" letter-spacing="4" fill="rgba(6,165,12,.7)" transform="translate(0,3)">PAYCLAW</text>
+            <text x="0" y="26" font-family="'Orbitron',monospace" font-size="26" font-weight="900" letter-spacing="4" fill="rgba(10,200,18,.6)" transform="translate(0,2)">PAYCLAW</text>
+            <text x="0" y="26" font-family="'Orbitron',monospace" font-size="26" font-weight="900" letter-spacing="4" fill="rgba(20,230,30,.5)" transform="translate(0,1)">PAYCLAW</text>
+            <text x="0" y="26" font-family="'Orbitron',monospace" font-size="26" font-weight="900" letter-spacing="4" fill="url(#lgNav)" filter="url(#navBloom)" opacity=".5">PAYCLAW</text>
+            <text class="glow-text" x="0" y="26" font-family="'Orbitron',monospace" font-size="26" font-weight="900" letter-spacing="4" fill="url(#lgNav)">PAYCLAW</text>
+            <text x="0" y="26" font-family="'Orbitron',monospace" font-size="26" font-weight="900" letter-spacing="4" fill="none" stroke="url(#strokeNav)" stroke-width=".8">PAYCLAW</text>
+            <g clip-path="url(#sheenClipNav)">
+              <rect class="sheen-rect" x="-40" y="0" width="60" height="34" fill="url(#sheenNav)" opacity=".65"/>
+            </g>
+          </svg>
+        </div>
+        <div class="logo-sub">PAYMENT SUITE · ARC NETWORK</div>
+      </div>
+    </div>
+    <div class="hdr-center">
+      <span>BLOCK <span id="hdrBlock">—</span></span>
+      <span style="color:rgba(57,255,20,.15)">·</span>
+      <span>CHAIN <span>1891</span></span>
+      <span style="color:rgba(57,255,20,.15)">·</span>
+      <span>ARC TESTNET</span>
+    </div>
+    <div class="hdr-right">
+      <div class="net-badge"><div class="pdot"></div>ARC TESTNET</div>
+      <div class="block-badge">BLOCK <span id="blockBadge">—</span></div>
+    </div>
+  </header>
+
+  <!-- TICKER -->
+  <div class="ticker-bar">
+    <div class="ticker-inner">
+      <span class="t-item"><span class="t-sep">◆</span> AUTONOMOUS PAYROLL <span class="hi">ARC NETWORK</span></span>
+      <span class="t-item"><span class="t-sep">◆</span> CIRCLE APP KIT <span class="hi">SEND · BRIDGE · SWAP · UNIFIED BALANCE</span></span>
+      <span class="t-item"><span class="t-sep">◆</span> AI AGENT <span class="hi">ERC-8183 · REGISTERED</span></span>
+      <span class="t-item"><span class="t-sep">◆</span> USDC NATIVE <span class="hi">CHAIN 1891</span></span>
+      <span class="t-item"><span class="t-sep">◆</span> STABLECOIN FX <span class="hi">LIVE RATES</span></span>
+      <span class="t-item"><span class="t-sep">◆</span> PROGRAMMABLE WALLETS <span class="hi">CIRCLE API</span></span>
+      <span class="t-item"><span class="t-sep">◆</span> AUTONOMOUS PAYROLL <span class="hi">ARC NETWORK</span></span>
+      <span class="t-item"><span class="t-sep">◆</span> CIRCLE APP KIT <span class="hi">SEND · BRIDGE · SWAP · UNIFIED BALANCE</span></span>
+      <span class="t-item"><span class="t-sep">◆</span> AI AGENT <span class="hi">ERC-8183 · REGISTERED</span></span>
+      <span class="t-item"><span class="t-sep">◆</span> USDC NATIVE <span class="hi">CHAIN 1891</span></span>
+      <span class="t-item"><span class="t-sep">◆</span> STABLECOIN FX <span class="hi">LIVE RATES</span></span>
+      <span class="t-item"><span class="t-sep">◆</span> PROGRAMMABLE WALLETS <span class="hi">CIRCLE API</span></span>
+    </div>
+  </div>
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-tag">Complete Onchain Payment Infrastructure · Arc Network</div>
+    <h1 class="hero-title">
+      PAYCLAW<br>
+      <span class="suite-word">PAYMENT SUITE</span>
+    </h1>
+    <p class="hero-sub">
+      Every direction <strong>USDC</strong> needs to travel — all in one place.
+      Autonomous payroll. Cross-chain bridging. Token swaps. Micropayments.
+      Unified balances. Live FX rates. AI agent on Arc.
+    </p>
+
+    <!-- LIVE STATS -->
+    <div class="live-strip">
+      <div class="ls-cell"><div class="ls-lbl">Contract Balance</div><div class="ls-val g" id="statBal">—</div></div>
+      <div class="ls-cell"><div class="ls-lbl">Active Workers</div><div class="ls-val a" id="statWorkers">—</div></div>
+      <div class="ls-cell"><div class="ls-lbl">Live Block</div><div class="ls-val c" id="statBlock">—</div></div>
+      <div class="ls-cell"><div class="ls-lbl">Network</div><div class="ls-val g" style="font-size:13px">ARC 1891</div></div>
+    </div>
+    <div class="status-bar">
+      <div class="sb-item"><div class="sb-dot ok"></div>CONTRACT LIVE</div>
+      <div class="sb-item"><div class="sb-dot ok"></div>AGENT ARMED</div>
+      <div class="sb-item"><div class="sb-dot ok"></div>CIRCLE KIT ACTIVE</div>
+      <div class="sb-item"><div class="sb-dot ok"></div>USDC NATIVE · ARC</div>
+    </div>
+  </div>
+
+  <!-- SUITE CARDS -->
+  <div class="sec-label">Payment Tools</div>
+
+  <div class="suite-wrap">
+
+    <!-- 1. PAYROLL -->
+    <a href="/app" class="suite-card" style="--card-accent:#39ff14">
+      <div class="sc-icon-col">
+        <div class="sc-icon" style="border-color:rgba(57,255,20,.4);color:#39ff14;background:rgba(57,255,20,.06);">💼</div>
+      </div>
+      <div class="sc-content">
+        <div class="sc-tag" style="color:rgba(57,255,20,.6)">// Core · Arc Testnet · Solidity + AI Agent</div>
+        <div class="sc-title">Autonomous Payroll</div>
+        <div class="sc-desc">Fund the contract once and walk away. Every 30 days the AI agent wakes up, checks the registry, and sends USDC directly to every active worker's wallet — fully onchain, no approvals needed.</div>
+        <div class="sc-pills">
+          <span class="sc-pill" style="border-color:rgba(57,255,20,.2);color:rgba(57,255,20,.6)">Solidity Contract</span>
+          <span class="sc-pill" style="border-color:rgba(57,255,20,.2);color:rgba(57,255,20,.6)">30-Day Cycle</span>
+          <span class="sc-pill" style="border-color:rgba(57,255,20,.2);color:rgba(57,255,20,.6)">AI Agent</span>
+          <span class="sc-pill" style="border-color:rgba(57,255,20,.2);color:rgba(57,255,20,.6)">Arc Native</span>
+          <span class="sc-pill" style="border-color:rgba(57,255,20,.2);color:rgba(57,255,20,.6)">USDC</span>
+        </div>
+      </div>
+      <div class="sc-arrow-col"><span class="sc-arrow" style="color:#39ff14">→</span></div>
+    </a>
+
+    <!-- 2. BRIDGE -->
+    <a href="/bridge" class="suite-card" style="--card-accent:#00e5ff">
+      <div class="sc-icon-col">
+        <div class="sc-icon" style="border-color:rgba(0,229,255,.4);color:#00e5ff;background:rgba(0,229,255,.06);">⇄</div>
+      </div>
+      <div class="sc-content">
+        <div class="sc-tag" style="color:rgba(0,229,255,.6)">// Circle App Kit · CCTP v2 · Cross-Chain</div>
+        <div class="sc-title">Bridge USDC</div>
+        <div class="sc-desc">Hold USDC on Base, Arbitrum, or Ethereum? Bridge it directly into Arc in one step using Circle's Cross-Chain Transfer Protocol — 1:1 capital efficiency, no slippage, no wrapped tokens. Use it to fund your payroll contract from any chain.</div>
+        <div class="sc-pills">
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">Circle App Kit</span>
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">CCTP v2</span>
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">Base → Arc</span>
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">Arbitrum → Arc</span>
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">ETH → Arc</span>
+        </div>
+      </div>
+      <div class="sc-arrow-col"><span class="sc-arrow" style="color:#00e5ff">→</span></div>
+    </a>
+
+    <!-- 3. SWAP -->
+    <a href="/swap" class="suite-card" style="--card-accent:#00e5ff">
+      <div class="sc-icon-col">
+        <div class="sc-icon" style="border-color:rgba(0,229,255,.4);color:#00e5ff;background:rgba(0,229,255,.06);">↔</div>
+      </div>
+      <div class="sc-content">
+        <div class="sc-tag" style="color:rgba(0,229,255,.6)">// Circle App Kit · Arc Native · Kit Key Required</div>
+        <div class="sc-title">Swap Tokens</div>
+        <div class="sc-desc">Exchange tokens natively on Arc Testnet — the only testnet with App Kit Swap support. Convert between available tokens directly on Arc before depositing into the payroll contract or distributing to workers.</div>
+        <div class="sc-pills">
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">Circle App Kit</span>
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">Arc Native Swap</span>
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">Official SDK</span>
+        </div>
+      </div>
+      <div class="sc-arrow-col"><span class="sc-arrow" style="color:#00e5ff">→</span></div>
+    </a>
+
+    <!-- 4. SEND -->
+    <a href="/send" class="suite-card" style="--card-accent:#00e5ff">
+      <div class="sc-icon-col">
+        <div class="sc-icon" style="border-color:rgba(0,229,255,.4);color:#00e5ff;background:rgba(0,229,255,.06);">→</div>
+      </div>
+      <div class="sc-content">
+        <div class="sc-tag" style="color:rgba(0,229,255,.6)">// Circle App Kit · Any Amount · Sub-Second</div>
+        <div class="sc-title">Send Payment</div>
+        <div class="sc-desc">Send any USDC amount to any wallet on Arc — from $0.001 to $1,000,000, same speed, same finality. Use this to make one-time payments to workers outside the regular 30-day cycle, or to fund the contract directly from any wallet.</div>
+        <div class="sc-pills">
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">Circle App Kit</span>
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">Any Amount</span>
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">Micropayments</span>
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">Sub-Second</span>
+        </div>
+      </div>
+      <div class="sc-arrow-col"><span class="sc-arrow" style="color:#00e5ff">→</span></div>
+    </a>
+
+    <!-- 5. UNIFIED BALANCE -->
+    <a href="/balance" class="suite-card" style="--card-accent:#00e5ff">
+      <div class="sc-icon-col">
+        <div class="sc-icon" style="border-color:rgba(0,229,255,.4);color:#00e5ff;background:rgba(0,229,255,.06);">◈</div>
+      </div>
+      <div class="sc-content">
+        <div class="sc-tag" style="color:rgba(0,229,255,.6)">// Circle App Kit · Multi-Chain · Instant Spend</div>
+        <div class="sc-title">Unified Balance</div>
+        <div class="sc-desc">See your total USDC across all chains in one place. Deposit from Base, Arbitrum, or Ethereum — your balance unifies on Arc and becomes available instantly to fund payroll. Employers can see exactly how much they have before committing to a payroll cycle.</div>
+        <div class="sc-pills">
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">Circle App Kit</span>
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">Multi-Chain</span>
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">Instant Spend</span>
+          <span class="sc-pill" style="border-color:rgba(0,229,255,.2);color:rgba(0,229,255,.6)">USDC</span>
+        </div>
+      </div>
+      <div class="sc-arrow-col"><span class="sc-arrow" style="color:#00e5ff">→</span></div>
+    </a>
+
+    <!-- 6. FX RATES -->
+    <a href="/fx" class="suite-card" style="--card-accent:#ffe600">
+      <div class="sc-icon-col">
+        <div class="sc-icon" style="border-color:rgba(255,230,0,.4);color:#ffe600;background:rgba(255,230,0,.06);">💱</div>
+      </div>
+      <div class="sc-content">
+        <div class="sc-tag" style="color:rgba(255,230,0,.6)">// Arc StableFX · Circle API · Live Data</div>
+        <div class="sc-title">Stablecoin FX Rates</div>
+        <div class="sc-desc">Live conversion rates for USDC across major currencies. Workers can instantly see what their USDC salary is worth in USD, EUR, GBP, AED, and more — powered by Arc's native StableFX infrastructure and Circle API data.</div>
+        <div class="sc-pills">
+          <span class="sc-pill" style="border-color:rgba(255,230,0,.2);color:rgba(255,230,0,.6)">Arc StableFX</span>
+          <span class="sc-pill" style="border-color:rgba(255,230,0,.2);color:rgba(255,230,0,.6)">Circle API</span>
+          <span class="sc-pill" style="border-color:rgba(255,230,0,.2);color:rgba(255,230,0,.6)">Live Rates</span>
+          <span class="sc-pill" style="border-color:rgba(255,230,0,.2);color:rgba(255,230,0,.6)">Multi-Currency</span>
+        </div>
+      </div>
+      <div class="sc-arrow-col"><span class="sc-arrow" style="color:#ffe600">→</span></div>
+    </a>
+
+    <!-- 7. AI AGENT -->
+    <a href="/agent" class="suite-card" style="--card-accent:#ccff00">
+      <div class="sc-icon-col">
+        <div class="sc-icon" style="border-color:rgba(204,255,0,.4);color:#ccff00;background:rgba(204,255,0,.06);">🤖</div>
+      </div>
+      <div class="sc-content">
+        <div class="sc-tag" style="color:rgba(204,255,0,.6)">// Arc ERC-8183 · Agentic Economy · Registered</div>
+        <div class="sc-title">AI Agent Registry</div>
+        <div class="sc-desc">PayClaw's 30-day payroll agent is registered on Arc's ERC-8183 standard — the protocol for the agentic economy. View the agent's onchain identity, job history, next scheduled execution, and its relationship to the payroll contract.</div>
+        <div class="sc-pills">
+          <span class="sc-pill" style="border-color:rgba(204,255,0,.2);color:rgba(204,255,0,.6)">ERC-8183</span>
+          <span class="sc-pill" style="border-color:rgba(204,255,0,.2);color:rgba(204,255,0,.6)">Arc Native</span>
+          <span class="sc-pill" style="border-color:rgba(204,255,0,.2);color:rgba(204,255,0,.6)">GitHub Actions</span>
+          <span class="sc-pill" style="border-color:rgba(204,255,0,.2);color:rgba(204,255,0,.6)">Autonomous</span>
+        </div>
+      </div>
+      <div class="sc-arrow-col"><span class="sc-arrow" style="color:#ccff00">→</span></div>
+    </a>
+
+  </div>
+
+  <!-- POWERED BY -->
+  <div class="sec-label">Infrastructure</div>
+  <div class="powered-grid">
+    <div class="pw-card arc">
+      <div class="pw-name arc">ARC NETWORK</div>
+      <span class="pw-badge">// Purpose-built L1 for Financial Applications</span>
+      <p class="pw-desc">Circle's Layer 1 blockchain engineered for financial activity. Native USDC as the gas token, sub-second deterministic finality, and protocol-level infrastructure for payments, AI agents, and stablecoin FX — all without wrapping or bridging overhead.</p>
+      <div class="pills">
+        <span class="pill arc">Native USDC</span>
+        <span class="pill arc">L1 Blockchain</span>
+        <span class="pill arc">Instant Finality</span>
+        <span class="pill arc">EVM Compatible</span>
+        <span class="pill arc">ERC-8183 Agents</span>
+        <span class="pill arc">StableFX Native</span>
+      </div>
+    </div>
+    <div class="pw-card circ">
+      <div class="pw-name circ">CIRCLE</div>
+      <span class="pw-badge">// Stablecoin Infrastructure & Developer Platform</span>
+      <p class="pw-desc">USDC issuer and the developer platform behind PayClaw's cross-chain capabilities. Circle App Kit provides Send, Bridge, Swap, and Unified Balance widgets. The Circle API powers Programmable Wallets, Stablecoin FX rates, and CCTP cross-chain transfers.</p>
+      <div class="pills">
+        <span class="pill circ">USDC</span>
+        <span class="pill circ">App Kit</span>
+        <span class="pill circ">CCTP Bridge</span>
+        <span class="pill circ">Unified Balance</span>
+        <span class="pill circ">Circle API</span>
+        <span class="pill circ">StableFX</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-inner">
+      <div>
+        <div class="footer-brand">PAYCLAW</div>
+        <div class="footer-tagline">PAYMENT SUITE · ARC TESTNET · CIRCLE</div>
+      </div>
+      <div class="footer-links">
+        <a href="/app" class="footer-link">Payroll</a>
+        <a href="/bridge" class="footer-link">Bridge</a>
+        <a href="/swap" class="footer-link">Swap</a>
+        <a href="/send" class="footer-link">Send</a>
+        <a href="/balance" class="footer-link">Balance</a>
+        <a href="/fx" class="footer-link">FX Rates</a>
+        <a href="/agent" class="footer-link">Agent</a>
+      </div>
+      <div class="footer-tagline">// Arc Testnet · USDC Native</div>
+    </div>
+  </footer>
+</div>
+
+<script>
+// ── BOOT ──────────────────────────────────────────────────────────────
+const BOOT_LINES = [
+  '> INITIALIZING PAYCLAW PAYMENT SUITE...',
+  '> CONNECTING TO ARC NETWORK · CHAIN 1891...',
+  '> LOADING CIRCLE APP KIT · 4 WIDGETS...',
+  '> FETCHING STABLECOIN FX RATES...',
+  '> LOCATING AI AGENT · ERC-8183...',
+  '> ALL SYSTEMS ONLINE ✓',
+];
+(function boot() {
+  const lEl = document.getElementById('bootLines');
+  const fEl = document.getElementById('bootFill');
+  const pEl = document.getElementById('bootPct');
+  const bs  = document.getElementById('bootScreen');
+  let i = 0, cancelled = false, tid;
+  function next() {
+    if (cancelled) return;
+    if (i >= BOOT_LINES.length) {
+      bs.classList.add('curtain-drop');
+      tid = setTimeout(() => { if (!cancelled) bs.classList.add('fully-hidden'); }, 750);
+      return;
+    }
+    const d = document.createElement('div');
+    d.textContent = BOOT_LINES[i];
+    lEl.appendChild(d);
+    const pct = Math.round((i + 1) / BOOT_LINES.length * 100);
+    fEl.style.width = pct + '%';
+    if (pEl) pEl.textContent = pct + '%';
+    i++;
+    tid = setTimeout(next, i === BOOT_LINES.length ? 600 : 380);
+  }
+  setTimeout(next, 200);
+  window.addEventListener('unload', () => { cancelled = true; clearTimeout(tid); });
+})();
+
+// ── HEX GRID ──────────────────────────────────────────────────────────
+(function hexGrid() {
+  const canvas = document.getElementById('hexGridCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const R = 28, HW = R * Math.sqrt(3), HH = R * 1.5;
+  let W, H, hexes = [], t = 0, animId;
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+    hexes = [];
+    for (let r = -1; r < Math.ceil(H / HH) + 2; r++)
+      for (let c = -1; c < Math.ceil(W / HW) + 2; c++)
+        hexes.push({ x: c * HW + (r % 2 === 0 ? 0 : HW / 2), y: r * HH, a: Math.random() * .28 + .04, s: Math.random() * .004 + .001, p: Math.random() * Math.PI * 2 });
+  }
+  function hex(x, y, r) {
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) { const a = Math.PI / 180 * (60 * i - 30); ctx.lineTo(x + r * Math.cos(a), y + r * Math.sin(a)); }
+    ctx.closePath();
+  }
+  function draw() {
+    ctx.clearRect(0, 0, W, H); t += .008;
+    for (const h of hexes) {
+      const a = h.a * (.5 + .5 * Math.sin(t * h.s * 200 + h.p));
+      ctx.strokeStyle = `rgba(57,255,20,${a})`; ctx.lineWidth = .5;
+      hex(h.x, h.y, R - 2); ctx.stroke();
+    }
+    animId = window.setTimeout(() => requestAnimationFrame(draw), 50);
+  }
+  window.addEventListener('resize', resize); resize(); draw();
+})();
+
+// ── CURSOR ────────────────────────────────────────────────────────────
+(function cursor() {
+  const cur = document.getElementById('cur');
+  const dot = document.getElementById('curDot');
+  if (!cur || !dot) return;
+  let mx = 0, my = 0, cx = 0, cy = 0;
+  window.addEventListener('mousemove', e => {
+    mx = e.clientX; my = e.clientY;
+    dot.style.left = mx + 'px'; dot.style.top = my + 'px';
+  });
+  (function anim() {
+    cx += (mx - cx) * .14; cy += (my - cy) * .14;
+    cur.style.left = cx + 'px'; cur.style.top = cy + 'px';
+    requestAnimationFrame(anim);
+  })();
+})();
+
+// ── SPOTLIGHT ─────────────────────────────────────────────────────────
+window.addEventListener('mousemove', e => {
+  const sp = document.getElementById('spotlight');
+  if (sp) { sp.style.setProperty('--mx', e.clientX + 'px'); sp.style.setProperty('--my', e.clientY + 'px'); }
+});
+
+// ── LIVE DATA ─────────────────────────────────────────────────────────
+const ARC_RPC = 'https://rpc.testnet.arc.network';
+const CONTRACT = '0x6263d965f8753cdEE92CCCC53e2C2B1066287f63';
+const ABI_MINI = [
+  'function getContractBalance() view returns (uint256)',
+  'function workerCount() view returns (uint256)',
+];
+
+async function fetchBlock() {
+  try {
+    const ac = new AbortController();
+    const tid = setTimeout(() => ac.abort(), 4000);
+    const r = await fetch(ARC_RPC, {
+      method: 'POST', signal: ac.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ jsonrpc: '2.0', method: 'eth_blockNumber', params: [], id: 1 }),
+    });
+    clearTimeout(tid);
+    const d = await r.json();
+    const block = parseInt(d.result, 16).toLocaleString();
+    ['statBlock', 'hdrBlock', 'blockBadge'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.textContent = block; el.style.color = 'var(--g1)'; }
+    });
+  } catch { }
+}
+
+async function fetchContractData() {
+  try {
+    const calls = [
+      { jsonrpc: '2.0', method: 'eth_call', params: [{ to: CONTRACT, data: '0x6e15b14f' }, 'latest'], id: 1 },
+      { jsonrpc: '2.0', method: 'eth_call', params: [{ to: CONTRACT, data: '0x8faeed52' }, 'latest'], id: 2 },
+    ];
+    const r = await fetch(ARC_RPC, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(calls) });
+    const results = await r.json();
+    if (results[0]?.result) {
+      const bal = parseInt(results[0].result, 16) / 1e18;
+      const el = document.getElementById('statBal');
+      if (el) el.textContent = bal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' USDC';
+    }
+    if (results[1]?.result) {
+      const wc = parseInt(results[1].result, 16);
+      const el = document.getElementById('statWorkers');
+      if (el) el.textContent = wc;
+    }
+  } catch { }
+}
+
+fetchBlock();
+fetchContractData();
+setInterval(fetchBlock, 5000);
+setInterval(fetchContractData, 30000);
+</script>
+</body>
+</html>
