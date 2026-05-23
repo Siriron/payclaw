@@ -14,9 +14,9 @@ export default function BalancePage() {
       desc="View your total USDC across all chains in one place. Deposit from Base, Arbitrum, or Ethereum — your balance unifies on Arc and becomes instantly available to fund the PayClaw payroll contract. Know exactly how much you have before committing to a payroll cycle."
     >
       {KIT_KEY ? (
-        <div id="circle-balance-widget" style={{ minHeight: 320 }}>
-          <circle-unified-balance-widget kit-key={KIT_KEY} />
-        </div>
+        <div id="circle-balance-widget" style={{ minHeight: 320 }}
+          ref={el => { if (el && !el.firstChild) { const w = document.createElement('circle-unified-balance-widget'); w.setAttribute('kit-key', KIT_KEY); el.appendChild(w); } }}
+        />
       ) : (
         <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'rgba(0,229,255,.35)', letterSpacing: '.12em', padding: '32px 0', lineHeight: 2 }}>
           // CIRCLE KIT KEY NOT CONFIGURED<br />
