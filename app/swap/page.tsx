@@ -14,9 +14,9 @@ export default function SwapPage() {
       desc="Exchange tokens natively on Arc Testnet — the only testnet with Circle App Kit Swap support. Convert between available tokens on Arc before depositing into the payroll contract or distributing to workers."
     >
       {KIT_KEY ? (
-        <div id="circle-swap-widget" style={{ minHeight: 320 }}>
-          <circle-swap-widget kit-key={KIT_KEY} />
-        </div>
+        <div id="circle-swap-widget" style={{ minHeight: 320 }}
+          ref={el => { if (el && !el.firstChild) { const w = document.createElement('circle-swap-widget'); w.setAttribute('kit-key', KIT_KEY); el.appendChild(w); } }}
+        />
       ) : (
         <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'rgba(0,229,255,.35)', letterSpacing: '.12em', padding: '32px 0', lineHeight: 2 }}>
           // CIRCLE KIT KEY NOT CONFIGURED<br />
