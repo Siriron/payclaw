@@ -1,26 +1,20 @@
 {
   "version": 2,
-  "buildCommand": "",
-  "outputDirectory": ".",
+  "framework": "nextjs",
+  "buildCommand": "next build",
+  "outputDirectory": ".next",
   "routes": [
     {
-      "src": "/payments.json",
-      "dest": "/payments.json",
-      "headers": {
-        "Content-Type": "application/json; charset=utf-8",
-        "Cache-Control": "public, max-age=300, stale-while-revalidate=600"
-      }
-    },
-    {
       "src": "/",
-      "dest": "/index.html",
-      "headers": {
-        "Cache-Control": "public, max-age=60, stale-while-revalidate=120"
-      }
+      "dest": "/landing.html"
     },
     {
-      "src": "/(.*)",
+      "src": "/app",
       "dest": "/index.html"
+    },
+    {
+      "src": "/payments.json",
+      "dest": "/payments.json"
     }
   ],
   "headers": [
@@ -28,7 +22,7 @@
       "source": "/(.*)",
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
-        { "key": "X-Frame-Options", "value": "DENY" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
       ]
