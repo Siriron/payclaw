@@ -112,7 +112,7 @@ export default function AgentPage() {
 
       {loading ? (
         <div style={{ fontFamily: 'var(--mono)', fontSize: 11, color: 'rgba(204,255,0,.4)', letterSpacing: '.14em', padding: '24px 0' }}>
-          > LOADING AGENT DATA FROM ARC...
+          {'>'} LOADING AGENT DATA FROM ARC...
         </div>
       ) : (
         <>
