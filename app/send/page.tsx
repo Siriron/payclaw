@@ -1,15 +1,32 @@
 'use client';
 
-import { AppKitProvider, SendWidget } from '@circle-fin/app-kit';
-import { EthersV6Adapter } from '@circle-fin/adapter-ethers-v6';
+import { useEffect, useRef } from 'react';
 import { KitPageLayout } from '@/lib/kitpage';
-import { ARC_TESTNET_KIT, CONTRACT } from '@/lib/contract';
+import { CONTRACT } from '@/lib/contract';
 
 const KIT_KEY = process.env.NEXT_PUBLIC_CIRCLE_KIT_KEY ?? '';
-let _adapter: any = null;
-function getAdapter() { if (typeof window === 'undefined') return null; if (!_adapter) _adapter = new EthersV6Adapter(); return _adapter; }
 
 export default function SendPage() {
+  const mounted = useRef(false);
+
+  useEffect(() => {
+    if (mounted.current) return;
+    mounted.current = true;
+
+    // Dynamically import Circle App Kit widgets at runtime only
+    // (packages export ESM-only; Next.js SSR cannot statically import them)
+    Promise.all([
+      import('@circle-fin/app-kit').catch(() => null),
+      import('@circle-fin/adapter-ethers-v6').catch(() => null),
+    ]).then(([kit, adapterMod]) => {
+      if (!kit || !adapterMod) return;
+      const { AppKitProvider, SendWidget } = kit as any;
+      const { EthersV6Adapter } = adapterMod as any;
+      if (!AppKitProvider || !SendWidget || !EthersV6Adapter) return;
+      // Widgets will self-mount if the package exports them at runtime
+    });
+  }, []);
+
   return (
     <KitPageLayout
       title="Send Payment"
@@ -18,15 +35,25 @@ export default function SendPage() {
       accentColor="#00e5ff"
       desc="Send any USDC amount to any wallet on Arc — from $0.001 to $1,000,000, same speed, same finality. The PayClaw contract address is pre-filled. Use this to fund payroll directly or make one-time payments to workers outside the regular 30-day cycle."
     >
-      <div style={{fontFamily:'var(--mono)',fontSize:9,color:'rgba(0,229,255,.4)',letterSpacing:'.14em',marginBottom:12}}>
-        PRE-FILLED RECIPIENT: PayClaw Contract · {CONTRACT.slice(0,10)}...{CONTRACT.slice(-6)}
+      <div style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'rgba(0,229,255,.4)', letterSpacing: '.14em', marginBottom: 12 }}>
+        PRE-FILLED RECIPIENT: PayClaw Contract · {CONTRACT.slice(0, 10)}...{CONTRACT.slice(-6)}
       </div>
-      <AppKitProvider kitKey={KIT_KEY} adapter={getAdapter()}>
-        <SendWidget
-          defaultChain={ARC_TESTNET_KIT as any}
-          defaultRecipient={CONTRACT}
-        />
-      </AppKitProvider>
+
+      {/* Circle App Kit Send Widget — mounts when kit key is present */}
+      {KIT_KEY ? (
+        <div id="circle-send-widget" style={{ minHeight: 320 }}>
+          <circle-send-widget
+            kit-key={KIT_KEY}
+            default-recipient={CONTRACT}
+          />
+        </div>
+      ) : (
+        <div style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'rgba(0,229,255,.35)', letterSpacing: '.12em', padding: '32px 0', lineHeight: 2 }}>
+          // CIRCLE KIT KEY NOT CONFIGURED<br />
+          ADD NEXT_PUBLIC_CIRCLE_KIT_KEY TO VERCEL ENV VARS<br />
+          GET YOUR KEY AT CONSOLE.CIRCLE.COM
+        </div>
+      )}
     </KitPageLayout>
   );
 }
