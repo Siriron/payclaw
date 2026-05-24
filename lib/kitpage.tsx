@@ -234,7 +234,7 @@ export function AppKitWidget({ action, kitKey, defaultRecipient, accentColor = '
       if (!eth) throw new Error('No wallet provider found.');
 
       const adapter = await createViemAdapterFromProvider({ provider: eth });
-      const kit = new AppKit({ apiKey: kitKey || '' });
+      const kit = new AppKit({});
 
       if (action === 'send') {
         if (!recipient) { setErr('Enter a recipient address.'); return; }
