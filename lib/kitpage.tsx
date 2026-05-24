@@ -269,7 +269,7 @@ export function AppKitWidget({ action, kitKey, defaultRecipient, accentColor = '
       }
 
       else if (action === 'balance') {
-        const bal = await kit.unifiedBalance.getBalance({ adapter });
+        const bal = await kit.unifiedBalance.getBalances({ adapter });
         setOk(`◈ Unified Balance: ${(bal as any)?.balance || bal} USDC`);
       }
 
