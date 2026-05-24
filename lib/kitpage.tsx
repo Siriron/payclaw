@@ -269,8 +269,13 @@ export function AppKitWidget({ action, kitKey, defaultRecipient, accentColor = '
       }
 
       else if (action === 'balance') {
-        const bal = await kit.unifiedBalance.getBalances({ from: { adapter } });
-        setOk(`◈ Unified Balance: ${(bal as any)?.balance || bal} USDC`);
+        const accounts = await eth.request({ method: 'eth_accounts' });
+        const bal = await kit.unifiedBalance.getBalances({
+          sources: { account: accounts[0] },
+          token: 'USDC',
+        });
+        const total = bal.totalConfirmedBalance ?? '0';
+        setOk(`◈ Unified Balance: ${total} USDC`);
       }
 
     } catch (e: any) {
