@@ -215,4 +215,4 @@ Open [http://localhost:3000](http://localhost:3000).
 
 ---
 
-Built on Arc Testnet. Powered by Circle.
+Built on Arc Testnet by Circle.
