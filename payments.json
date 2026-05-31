@@ -1,0 +1,54 @@
+{
+  "cycle": 1,
+  "cycle_date": "2026-05-31",
+  "next_cycle": "2026-06-30",
+  "next_payment_due": "Sun, 31 May 2026 10:14:20 GMT",
+  "last_payment_tx": "0x676fdb42aeebe19297443695bb2f150357e8fc4072f79f67d972b7dd63cd512b",
+  "agent_decision": "28-day cycle elapsed and balance sufficient",
+  "paid_this_run": true,
+  "contract_balance": "2825.50",
+  "payroll_needed": "24.50",
+  "note": "Cycle 1 paid — Arc Testnet",
+  "recipients": [
+    {
+      "name": "0xVault",
+      "wallet": "0xe95fFd282d3C393eFC1112aE47887312C9B967D4",
+      "amount": "5.00 USDC"
+    },
+    {
+      "name": "nullbyte.eth",
+      "wallet": "0x72E0f68cbB6FD05f5d2ABCA0ba7dd02eB68657E5",
+      "amount": "4.50 USDC"
+    },
+    {
+      "name": "arcweave",
+      "wallet": "0x1385b4E949659310a5FfC6153DCAa3f5FC2F3afc",
+      "amount": "4.50 USDC"
+    },
+    {
+      "name": "0xShadow",
+      "wallet": "0x99ea5f4D62730783068b17c89Cc41eBaa467D3df",
+      "amount": "4.00 USDC"
+    },
+    {
+      "name": "hexnode",
+      "wallet": "0x30E8Dd857a362DDb696Cd38cb03EAA3dC4523d75",
+      "amount": "3.50 USDC"
+    },
+    {
+      "name": "dao_ghost",
+      "wallet": "0x7B2ca3d8F1E0945B6c2d7f8e3A1b4c9D0e5F2a3B",
+      "amount": "3.00 USDC"
+    }
+  ],
+  "history": [
+    {
+      "cycle": 1,
+      "date": "2026-05-31",
+      "tx": "0x676fdb42aeebe19297443695bb2f150357e8fc4072f79f67d972b7dd63cd512b",
+      "workers": 6,
+      "total": "2825.50 USDC",
+      "reason": "28-day cycle elapsed and balance sufficient"
+    }
+  ]
+}
