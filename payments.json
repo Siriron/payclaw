@@ -1,14 +1,14 @@
 {
   "cycle": 1,
-  "cycle_date": "2026-05-31",
-  "next_cycle": "2026-06-30",
-  "next_payment_due": "Sun, 31 May 2026 10:14:20 GMT",
+  "cycle_date": "2026-06-01",
+  "next_cycle": "2026-07-01",
+  "next_payment_due": "Tue, 30 Jun 2026 10:51:03 GMT",
   "last_payment_tx": "0x676fdb42aeebe19297443695bb2f150357e8fc4072f79f67d972b7dd63cd512b",
-  "agent_decision": "28-day cycle elapsed and balance sufficient",
-  "paid_this_run": true,
-  "contract_balance": "2825.50",
+  "agent_decision": "Cycle not elapsed — only 1 days since last payment (need 28)",
+  "paid_this_run": false,
+  "contract_balance": "2801.00",
   "payroll_needed": "24.50",
-  "note": "Cycle 1 paid — Arc Testnet",
+  "note": "Cycle 1 skipped — Cycle not elapsed — only 1 days since last payment (need 28)",
   "recipients": [
     {
       "name": "0xVault",
