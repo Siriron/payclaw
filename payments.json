@@ -1,14 +1,14 @@
 {
-  "cycle": 1,
-  "cycle_date": "2026-06-01",
-  "next_cycle": "2026-07-01",
+  "cycle": 2,
+  "cycle_date": "2026-07-01",
+  "next_cycle": "2026-07-31",
   "next_payment_due": "Tue, 30 Jun 2026 10:51:03 GMT",
-  "last_payment_tx": "0x676fdb42aeebe19297443695bb2f150357e8fc4072f79f67d972b7dd63cd512b",
-  "agent_decision": "Cycle not elapsed — only 1 days since last payment (need 28)",
-  "paid_this_run": false,
-  "contract_balance": "2801.00",
+  "last_payment_tx": "0x325606fca47d869b0b036124ded125d77fc75b620286040f37b4914e65706447",
+  "agent_decision": "28-day cycle elapsed and balance sufficient",
+  "paid_this_run": true,
+  "contract_balance": "2801.01",
   "payroll_needed": "24.50",
-  "note": "Cycle 1 skipped — Cycle not elapsed — only 1 days since last payment (need 28)",
+  "note": "Cycle 2 paid — Arc Testnet",
   "recipients": [
     {
       "name": "0xVault",
@@ -48,6 +48,14 @@
       "tx": "0x676fdb42aeebe19297443695bb2f150357e8fc4072f79f67d972b7dd63cd512b",
       "workers": 6,
       "total": "2825.50 USDC",
+      "reason": "28-day cycle elapsed and balance sufficient"
+    },
+    {
+      "cycle": 2,
+      "date": "2026-07-01",
+      "tx": "0x325606fca47d869b0b036124ded125d77fc75b620286040f37b4914e65706447",
+      "workers": 6,
+      "total": "2801.01 USDC",
       "reason": "28-day cycle elapsed and balance sufficient"
     }
   ]
